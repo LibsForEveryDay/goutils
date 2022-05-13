@@ -13,10 +13,34 @@ type GenericPair[K comparable, V any] struct {
 type GenericPairList[K comparable, V any] []GenericPair[K, V]
 
 // Sort sorts the overall map[K]V by key or by value. It returns GenericPairList[K, V].
+//
+//  Example:
+//  	func main() {
+//  		data := map[string]int{
+//  			"a": 3, "b": 1, "c": 5,
+//  			"d": 0, "e": 2, "f": 4,
+//  		}
+//
+//  		fmt.Println("Original:", data)
+//
+//  		res := maputils.Sort(data, func(k1, k2 maputils.GenericPair[string, int]) bool {
+//  			return k1.Key < k2.Key
+//  		}, false)
+//
+//  		fmt.Println("\nSorted by key:")
+//  		maputils.PrintGenericList(res)
+//
+//  		res = maputils.Sort(data, func(k1, k2 maputils.GenericPair[string, int]) bool {
+//  			return k1.Value < k2.Value
+//  		}, false)
+//
+//  		fmt.Println("\nSorted by value:")
+//  		maputils.PrintGenericList(res)
+//  	}
+//
 func Sort[M map[K]V, K comparable, V any](
 	m M,
-	fKey func(k1, k2 K) bool,
-	fVal func(v1, v2 V) bool,
+	f func(p1, p2 GenericPair[K, V]) bool,
 	reverse bool,
 ) GenericPairList[K, V] {
 	var res []GenericPair[K, V] = make([]GenericPair[K, V], 0, len(m))
@@ -27,11 +51,7 @@ func Sort[M map[K]V, K comparable, V any](
 
 	var status bool
 	sort.Slice(res, func(i, j int) bool {
-		if fVal != nil {
-			status = fVal(res[i].Value, res[j].Value)
-		} else {
-			status = fKey(res[i].Key, res[j].Key)
-		}
+		status = f(res[i], res[j])
 		if reverse {
 			status = !status
 		}
@@ -39,16 +59,6 @@ func Sort[M map[K]V, K comparable, V any](
 	})
 
 	return res
-}
-
-// Sort sorts the overall map[K]V by key. It returns GenericPairList[K, V].
-func SortByKey[M map[K]V, K comparable, V any](m M, fKey func(k1, k2 K) bool, reverse bool) GenericPairList[K, V] {
-	return Sort(m, fKey, nil, reverse)
-}
-
-// Sort sorts the overall map[K]V by value. It returns GenericPairList[K, V].
-func SortByVal[M map[K]V, K comparable, V any](m M, fVal func(v1, v2 V) bool, reverse bool) GenericPairList[K, V] {
-	return Sort(m, nil, fVal, reverse)
 }
 
 func PrintGenericList[K comparable, V any](pairs GenericPairList[K, V]) {
